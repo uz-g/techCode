@@ -304,48 +304,39 @@ void autonomous()
 void opcontrol()
 {
 
-	bool wingToggle = false;
-
 	bool leftWingState = false;
 
 	bool rightWingState = false;
 
 	while (true)
 	{
+
+		// drivetrain controls
 		setBrakeModeOf("chassis", "coast");
 		leftMotors.move(master.get_analog(ANALOG_LEFT_Y));
 		rightMotors.move(master.get_analog(ANALOG_RIGHT_Y));
 
+		// wing controls
 		if (master.get_digital_new_press(DIGITAL_L1))
 		{ // Left wing
 			leftWingState = !leftWingState;
-			wingToggle = false; // Reset wingToggle if an individual wing is toggled
+			leftWing.set_value(leftWingState);
 		}
 		else if (master.get_digital_new_press(DIGITAL_R1))
 		{ // Right wing
 			rightWingState = !rightWingState;
-			wingToggle = false;
-
+			rightWing.set_value(rightWingState);
 		}
 
-		if (master.get_digital_new_press(DIGITAL_L2))
+		else if (master.get_digital_new_press(DIGITAL_L2))
 		{ // Both wings
-			wingToggle = !wingToggle;
+			leftWingState = !leftWingState;
+			rightWingState = leftWingState;
+			leftWing.set_value(leftWingState);
+			rightWing.set_value(rightWingState);
 		}
 
-		if (wingToggle)
-		{
-			leftWingState = true;
-			rightWingState = true;
-		} 
-		else if (!wingToggle && !leftWingState && !rightWingState)
-		{
-			leftWingState = false;
-			rightWingState = false;
-		}
-
-		leftWing.set_value(leftWingState);
-		rightWing.set_value(rightWingState);
+		// intake controls
 
 		pros::delay(10); // Run for 20 ms then update
 	}
