@@ -79,6 +79,35 @@ enum class autonState
 };
 autonState autonSelection = autonState::off;
 
+static const char *btnmMap[] = {"far side", "close side", "skills", ""}; // button matrix map for auton selection
+
+static lv_res_t autonBtnmAction(lv_obj_t *btnm, const char *txt) // button matrix action for auton selection
+{
+	if (lv_obj_get_free_num(btnm) == 100)
+	{ // reds
+		if (txt == "far side")
+		{
+			master.rumble(". _");
+
+			autonSelection = autonState::closeSide;
+		}
+		else if (txt == "close side")
+		{
+			master.rumble(".. _");
+
+			autonSelection = autonState::farSide;
+		}
+		else if (txt == "skills")
+		{
+			master.rumble("_._");
+
+			autonSelection = autonState::skills;
+		}
+	}
+
+	return LV_RES_OK; // return OK because the button matrix is not deleted
+}
+
 // make a function to set the brake mode of the motors by requesting the name of motors and the mode of the brake,
 //  when requesting this stuff use strings and if statements
 void setBrakeModeOf(std::string motorName, std::string brakeMode)
@@ -204,8 +233,29 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
 void initialize()
 {
 	chassis.calibrate();
-}
 
+	// djmango korvex gui stuff
+
+	lv_theme_t *th = lv_theme_alien_init(300, NULL); // Set a HUE value and keep font default MAGENTA
+	lv_theme_set_current(th);
+
+	// create a tab view object
+	std::cout << pros::millis() << ": creating gui..." << std::endl;
+	lv_obj_t *tabview = lv_tabview_create(lv_scr_act(), NULL);
+
+	// add 4 tabs (the tabs are page (lv_page) and can be scrolled
+	lv_obj_t *mainTab = lv_tabview_add_tab(tabview, "Autons");
+
+	// main tab
+	lv_obj_t *mainBtnm = lv_btnm_create(mainTab, NULL);
+	lv_btnm_set_map(mainBtnm, btnmMap);
+	lv_btnm_set_action(mainBtnm, autonBtnmAction);
+	lv_obj_set_size(mainBtnm, 450, 50);
+	lv_btnm_set_toggle(mainBtnm, true, 3);
+	lv_obj_set_pos(mainBtnm, 0, 100);
+	lv_obj_align(mainBtnm, NULL, LV_ALIGN_CENTER, 0, 0);
+	lv_obj_set_free_num(mainBtnm, 100);
+}
 /**
  * Runs while the robot is in the disabled state of Field Management System or
  * the VEX Competition Switch, following either autonomous or opcontrol. When
@@ -213,9 +263,12 @@ void initialize()
  */
 void disabled()
 {
-	// chassis->stop();
-	// intake.moveVelocity(0);
-	// catapult.moveVelocity(0);
+	leftMotors.move_velocity(0);
+	rightMotors.move_velocity(0);
+	intake.move_velocity(0);
+	catapult.move_velocity(0);
+	leftWing.set_value(false);
+	rightWing.set_value(false);
 }
 
 /**
@@ -248,7 +301,7 @@ void autonomous()
 	auto startTime = std::chrono::high_resolution_clock::now();
 
 	if (autonSelection == autonState::off)
-		autonSelection = autonState::skills; // use testing if we havent selected an auton
+		autonSelection = autonState::skills; // use skills [the main focus] if we havent selected an auton just in case
 
 	switch (autonSelection)
 	{
@@ -267,7 +320,7 @@ void autonomous()
 		auto markTime = std::chrono::high_resolution_clock::now();
 
 		// Launch the catapult and measure time
-		// catapult.moveVelocity(100);
+		catapult.move_velocity(100);
 
 		// Loop for 40 seconds from the mark
 		while (std::chrono::duration_cast<std::chrono::seconds>(
@@ -277,7 +330,7 @@ void autonomous()
 		}
 
 		// Stop the catapult
-		// catapult.moveVelocity(0);
+		catapult.move_velocity(0);
 
 		break;
 	}
@@ -303,18 +356,45 @@ void autonomous()
  */
 void opcontrol()
 {
+	setBrakeModeOf("chassis", "coast");
+	setBrakeModeOf("intake", "coast");
+	setBrakeModeOf("catapult", "hold");
+	master.rumble(".");
+
+	bool reversed = false;
 
 	bool leftWingState = false;
 
 	bool rightWingState = false;
 
+	bool intakeToggled = false;
+
+	bool launcherToggle = false;
+
 	while (true)
 	{
 
-		// drivetrain controls
-		setBrakeModeOf("chassis", "coast");
-		leftMotors.move(master.get_analog(ANALOG_LEFT_Y));
-		rightMotors.move(master.get_analog(ANALOG_RIGHT_Y));
+		if (master.get_digital_new_press(DIGITAL_X))
+		{
+			reversed = !reversed;
+		}
+
+		double leftStick = master.get_analog(ANALOG_LEFT_Y);
+		double rightStick = master.get_analog(ANALOG_RIGHT_Y);
+
+		if (reversed)
+		{
+			leftStick *= -1;
+			rightStick *= -1;
+
+			leftMotors.move(rightStick);
+			rightMotors.move(leftStick);
+		}
+		else if (!reversed)
+		{
+			leftMotors.move(leftStick);
+			rightMotors.move(rightStick);
+		}
 
 		// wing controls
 		if (master.get_digital_new_press(DIGITAL_L1))
@@ -337,6 +417,44 @@ void opcontrol()
 		}
 
 		// intake controls
+		if (master.get_digital(DIGITAL_R2))
+		{
+			intake.move_velocity(200);
+		}
+		else if (master.get_digital(DIGITAL_DOWN))
+		{
+			intake.move_velocity(-200);
+		}
+		else if (master.get_digital_new_press(DIGITAL_UP))
+		{
+			intakeToggled = !intakeToggled;
+		}
+		else if (intakeToggled)
+		{
+			intake.move_velocity(200);
+		}
+		else if (!intakeToggled)
+		{
+			intake.move_velocity(0);
+		}
+
+		// catapult controls
+		if (master.get_digital(DIGITAL_A))
+		{
+			catapult.move_velocity(100);
+		}
+		else if (master.get_digital_new_press(DIGITAL_Y))
+		{
+			launcherToggle = !launcherToggle;
+		}
+		else if (launcherToggle)
+		{
+			catapult.move_velocity(100);
+		}
+		else if (!launcherToggle)
+		{
+			catapult.move_velocity(0);
+		}
 
 		pros::delay(10); // Run for 20 ms then update
 	}
