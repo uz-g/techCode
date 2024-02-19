@@ -10,11 +10,13 @@ pros::Motor rF(RIGHT_MTR_F, pros::E_MOTOR_GEARSET_06); // right front motor
 pros::Motor rM(RIGHT_MTR_M, pros::E_MOTOR_GEARSET_06); // right middle motor
 pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
 
-pros::Motor intake(INTAKE, pros::E_MOTOR_GEARSET_18);	  // intake motor
-pros::Motor catapult(CATAPULT, pros::E_MOTOR_GEARSET_36); // catapult motor
+pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_18);	  // intake motor
+pros::Motor cataF(CATAPULT, pros::E_MOTOR_GEARSET_36); // catapult motor
 
 pros::MotorGroup leftMotors({lF, lM, lB});	// left motor group
 pros::MotorGroup rightMotors({rF, rM, rB}); // right motor group
+
+pros::MotorGroup catapult({cataF, cataR}); // catapult motor group
 
 // sensors
 pros::Imu inertial(INERTIAL);				// inertial sensor
@@ -184,36 +186,53 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
 			rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		}
 	}
-	else if (motorName == "intake")
+	else if (motorName == "cataR")
 	{
 		if (brakeMode == "coast")
 		{
-			intake.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 		}
 		else if (brakeMode == "brake")
 		{
-			intake.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 		}
 		else if (brakeMode == "hold")
 		{
-			intake.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		}
 	}
-	else if (motorName == "catapult")
+	else if (motorName == "cataF")
 	{
 		if (brakeMode == "coast")
 		{
-			catapult.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 		}
 		else if (brakeMode == "brake")
 		{
-			catapult.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 		}
 		else if (brakeMode == "hold")
 		{
-			catapult.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+		}
+	} else if (motorName == "catapult") {
+		if (brakeMode == "coast")
+		{
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+		}
+		else if (brakeMode == "brake")
+		{
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+		}
+		else if (brakeMode == "hold")
+		{
+			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		}
 	}
+	
 }
 
 /**
@@ -265,8 +284,8 @@ void disabled()
 {
 	leftMotors.move_velocity(0);
 	rightMotors.move_velocity(0);
-	intake.move_velocity(0);
-	catapult.move_velocity(0);
+	cataR.move_velocity(0);
+	cataF.move_velocity(0);
 	leftWing.set_value(false);
 	rightWing.set_value(false);
 }
@@ -435,27 +454,27 @@ void opcontrol()
 			rightWing.set_value(rightWingState);
 		}
 
-		// intake controls
-		if (master.get_digital(DIGITAL_R2))
-		{
-			intake.move_velocity(200);
-		}
-		else if (master.get_digital(DIGITAL_DOWN))
-		{
-			intake.move_velocity(-200);
-		}
-		else if (master.get_digital_new_press(DIGITAL_UP))
-		{
-			intakeToggled = !intakeToggled;
-		}
-		else if (intakeToggled)
-		{
-			intake.move_velocity(200);
-		}
-		else if (!intakeToggled)
-		{
-			intake.move_velocity(0);
-		}
+		// // intake controls
+		// if (master.get_digital(DIGITAL_R2))
+		// {
+		// 	intake.move_velocity(200);
+		// }
+		// else if (master.get_digital(DIGITAL_DOWN))
+		// {
+		// 	intake.move_velocity(-200);
+		// }
+		// else if (master.get_digital_new_press(DIGITAL_UP))
+		// {
+		// 	intakeToggled = !intakeToggled;
+		// }
+		// else if (intakeToggled)
+		// {
+		// 	intake.move_velocity(200);
+		// }
+		// else if (!intakeToggled)
+		// {
+		// 	intake.move_velocity(0);
+		// }
 
 		// catapult controls
 		if (master.get_digital(DIGITAL_A))
