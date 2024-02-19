@@ -299,6 +299,7 @@ void autonomous()
 	setBrakeModeOf("intake", "coast");
 	setBrakeModeOf("catapult", "hold");
 	auto startTime = std::chrono::high_resolution_clock::now();
+	
 
 	if (autonSelection == autonState::off)
 		autonSelection = autonState::skills; // use skills [the main focus] if we havent selected an auton just in case
@@ -308,10 +309,27 @@ void autonomous()
 	case autonState::closeSide:
 		// opponent goalside auton
 
+		chassis.setPose(-48, -72, 0); //starting position
+		chassis.moveTo(-48, -50, 1000, 127); //drive forward
+		chassis.turnTo(-67, -32, 1000, 50); //turn to the left
+		chassis.moveTo(-67, -32, 2000, 127); //drive to the left and push ball in goal
+		chassis.turnTo(-67, -26, 1000, true, 50); //go and turn backwards
+		chassis.moveTo(-67, -26, 1000, 70);
+		chassis.moveTo(-67, -32, 1000, 127); //push ball in goal forwards
+		chassis.turnTo(-27, -67, 1000, 50); //turn to the right
+		chassis.moveTo(-27, -67, 2000, 70);
+		chassis.turnTo(-15, -67, 1000, 127);
+		chassis.moveTo(-15, -67, 1000, 127); //touch horizontal bar
+
 		break;
 
 	case autonState::farSide:
 		// ally goalside auton
+		chassis.setPose(0, 0, 0); //starting position
+		
+		chassis.moveTo(0, 10, 1000, 127); //lateral controller pid tuning command
+
+		// chassis.turnTo(0, 30, 1000, 127); //angular controller pid tuning command
 
 		break;
 
@@ -319,18 +337,19 @@ void autonomous()
 
 		auto markTime = std::chrono::high_resolution_clock::now();
 
-		// Launch the catapult and measure time
-		catapult.move_velocity(100);
 
 		// Loop for 40 seconds from the mark
 		while (std::chrono::duration_cast<std::chrono::seconds>(
 				   std::chrono::high_resolution_clock::now() - markTime)
 				   .count() < 35)
 		{
+			catapult.move_velocity(100); // Start the catapult for time
 		}
 
 		// Stop the catapult
 		catapult.move_velocity(0);
+
+
 
 		break;
 	}
