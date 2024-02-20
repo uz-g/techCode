@@ -10,8 +10,8 @@ pros::Motor rF(RIGHT_MTR_F, pros::E_MOTOR_GEARSET_06); // right front motor
 pros::Motor rM(RIGHT_MTR_M, pros::E_MOTOR_GEARSET_06); // right middle motor
 pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
 
-pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_18);	  // intake motor
-pros::Motor cataF(CATAPULT, pros::E_MOTOR_GEARSET_36); // catapult motor
+pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36);	  // intake motor
+pros::Motor cataF(CATA_F, pros::E_MOTOR_GEARSET_36); // catapult motor
 
 pros::MotorGroup leftMotors({lF, lM, lB});	// left motor group
 pros::MotorGroup rightMotors({rF, rM, rB}); // right motor group
@@ -422,11 +422,11 @@ void opcontrol()
 
 		if (reversed)
 		{
-			leftStick *= -1;
-			rightStick *= -1;
+			// leftStick *= -1;
+			// rightStick *= -1;
 
-			leftMotors.move(rightStick);
-			rightMotors.move(leftStick);
+			leftMotors.move(-rightStick);
+			rightMotors.move(-leftStick);
 		}
 		else if (!reversed)
 		{
@@ -479,7 +479,9 @@ void opcontrol()
 		// catapult controls
 		if (master.get_digital(DIGITAL_A))
 		{
-			catapult.move_velocity(100);
+			setBrakeModeOf("catapult", "hold");
+
+			catapult.move_velocity(60);
 		}
 		else if (master.get_digital_new_press(DIGITAL_Y))
 		{
@@ -487,11 +489,17 @@ void opcontrol()
 		}
 		else if (launcherToggle)
 		{
-			catapult.move_velocity(100);
+			setBrakeModeOf("catapult", "hold");
+			catapult.move_velocity(60);
 		}
 		else if (!launcherToggle)
 		{
 			catapult.move_velocity(0);
+		}
+
+		if (master.get_digital_new_press(DIGITAL_B))
+		{
+			setBrakeModeOf("catapult", "coast");
 		}
 
 		pros::delay(10); // Run for 20 ms then update
