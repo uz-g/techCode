@@ -9,8 +9,8 @@ pros::Motor rF(RIGHT_MTR_F, pros::E_MOTOR_GEARSET_06); // right front motor
 pros::Motor rM(RIGHT_MTR_M, pros::E_MOTOR_GEARSET_06); // right middle motor
 pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
 
-pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36);	  // cata motor
-pros::Motor cataF(CATA_F, pros::E_MOTOR_GEARSET_36); // catapult motor
+pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36); // cata motor
+pros::Motor cataF(CATA_F, pros::E_MOTOR_GEARSET_36);  // catapult motor
 
 pros::MotorGroup leftMotors({lF, lM, lB});	// left motor group
 pros::MotorGroup rightMotors({rF, rM, rB}); // right motor group
@@ -71,40 +71,46 @@ lemlib::ChassisController_t angularController{
 
 lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
-//drive curves
+// drive curves
 int forwardCurve = 14.6; // Curve strength
 
 // Function to calculate the curve for tank drive
-int curveTankDrive(bool red, int input, double t) {
-    if (red) {
-        // Red curve calculation
-        // Modify this calculation as needed
-        return (std::exp(-t / 10) + std::exp((std::abs(input) - 127) / 10) * (1 - std::exp(-t / 10))) * input; // Default behavior if red curve is specified
-    } else {
-        // Blue curve calculation
-        return std::exp(((std::abs(input) - 127) * t) / 1000) * input;
-    }
-}		
+int curveTankDrive(bool red, int input, double t)
+{
+	if (red)
+	{
+		// Red curve calculation
+		// Modify this calculation as needed
+		return (std::exp(-t / 10) + std::exp((std::abs(input) - 127) / 10) * (1 - std::exp(-t / 10))) * input; // Default behavior if red curve is specified
+	}
+	else
+	{
+		// Blue curve calculation
+		return std::exp(((std::abs(input) - 127) * t) / 1000) * input;
+	}
+}
 
 // Function to drive the robot using tank drive with curves
-void driveTankWithCurve(int leftInput, int rightInput) {
-    int leftVal = curveTankDrive(true, leftInput, forwardCurve);
-    int rightVal = curveTankDrive(true, rightInput, forwardCurve);
-
-    // Apply the calculated values to the left and right motors
-    leftMotors.move(leftVal);
-    rightMotors.move(rightVal);
-}
-
-void driveTankWithCurveReverse(int leftInput, int rightInput) {
+void driveTankWithCurve(int leftInput, int rightInput)
+{
 	int leftVal = curveTankDrive(true, leftInput, forwardCurve);
-    int rightVal = curveTankDrive(true, rightInput, forwardCurve);
+	int rightVal = curveTankDrive(true, rightInput, forwardCurve);
 
-    // Apply the calculated values to the left and right motors
-    leftMotors.move(-rightVal);
-    rightMotors.move(-leftVal);
+	// Apply the calculated values to the left and right motors
+	leftMotors.move(leftVal);
+	rightMotors.move(rightVal);
 }
-//auto selection [the state the the auton will be in]
+
+void driveTankWithCurveReverse(int leftInput, int rightInput)
+{
+	int leftVal = curveTankDrive(true, leftInput, forwardCurve);
+	int rightVal = curveTankDrive(true, rightInput, forwardCurve);
+
+	// Apply the calculated values to the left and right motors
+	leftMotors.move(-rightVal);
+	rightMotors.move(-leftVal);
+}
+// auto selection [the state the the auton will be in]
 enum class autonState
 {
 	off,
@@ -248,7 +254,9 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
 		{
 			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		}
-	} else if (motorName == "catapult") {
+	}
+	else if (motorName == "catapult")
+	{
 		if (brakeMode == "coast")
 		{
 			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
@@ -265,7 +273,6 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
 			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 		}
 	}
-	
 }
 
 /**
@@ -284,7 +291,6 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
 
 void initialize()
 {
-	chassis.calibrate();
 
 	// djmango korvex gui stuff
 
@@ -307,6 +313,8 @@ void initialize()
 	lv_obj_set_pos(mainBtnm, 0, 100);
 	lv_obj_align(mainBtnm, NULL, LV_ALIGN_CENTER, 0, 0);
 	lv_obj_set_free_num(mainBtnm, 100);
+
+	chassis.calibrate(); // calibrate the chassis and imu stuff
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -350,7 +358,6 @@ void autonomous()
 	setBrakeModeOf("chassis", "hold");
 	setBrakeModeOf("catapult", "hold");
 	auto startTime = std::chrono::high_resolution_clock::now();
-	
 
 	if (autonSelection == autonState::off)
 		autonSelection = autonState::skills; // use skills [the main focus] if we havent selected an auton just in case
@@ -360,25 +367,25 @@ void autonomous()
 	case autonState::closeSide:
 		// opponent goalside auton
 
-		chassis.setPose(-48, -72, 0); //starting position
-		chassis.moveTo(-48, -50, 1000, 127); //drive forward
-		chassis.turnTo(-67, -32, 1000, 50); //turn to the left
-		chassis.moveTo(-67, -32, 2000, 127); //drive to the left and push ball in goal
-		chassis.turnTo(-67, -26, 1000, true, 50); //go and turn backwards
-		chassis.moveTo(-67, -26, 1000, 70);
-		chassis.moveTo(-67, -32, 1000, 127); //push ball in goal forwards
-		chassis.turnTo(-27, -67, 1000, 50); //turn to the right
-		chassis.moveTo(-27, -67, 2000, 70);
-		chassis.turnTo(-15, -67, 1000, 127);
-		chassis.moveTo(-15, -67, 1000, 127); //touch horizontal bar
+		chassis.setPose(-48, -72, 0);			  // starting position
+		chassis.moveTo(-48, -50, 1000, 170);	  // drive forward
+		chassis.turnTo(-67, -32, 1000, 75);		  // turn to the left
+		chassis.moveTo(-67, -32, 2000, 170);	  // drive to the left and push ball in goal
+		chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
+		chassis.moveTo(-67, -26, 1000, 150);
+		chassis.moveTo(-67, -32, 1000, 170); // push ball in goal forwards
+		chassis.turnTo(-27, -67, 1000, 75);	 // turn to the right
+		chassis.moveTo(-27, -67, 2000, 170);
+		chassis.turnTo(-15, -67, 1000, 75);
+		chassis.moveTo(-15, -67, 1000, 170); // touch horizontal bar
 
 		break;
 
 	case autonState::farSide:
 		// ally goalside auton
-		chassis.setPose(0, 0, 0); //starting position
-		
-		chassis.moveTo(0, 10, 1000, 127); //lateral controller pid tuning command
+		chassis.setPose(0, 0, 0); // starting position
+
+		chassis.moveTo(0, 10, 1000, 127); // lateral controller pid tuning command
 
 		// chassis.turnTo(0, 30, 1000, 127); //angular controller pid tuning command
 
@@ -386,8 +393,18 @@ void autonomous()
 
 	case autonState::skills:
 
-		auto markTime = std::chrono::high_resolution_clock::now();
+		chassis.setPose(-48, -72, 0); // starting position
 
+		chassis.moveTo(-42, -40, 1000, 170); // drive forward
+
+		chassis.turnTo(-70, -32, 1000, true, 75); // turn to the left and backwards
+
+		chassis.moveTo(-70, -32, 1000, 170); // drive forward
+
+		rightWing.set_value(true); // hold on to matchload bar
+		chassis.turnTo(28, -24, 1000, 75); // turn to the left
+
+		auto markTime = std::chrono::high_resolution_clock::now();
 
 		// Loop for 40 seconds from the mark
 		while (std::chrono::duration_cast<std::chrono::seconds>(
@@ -400,6 +417,43 @@ void autonomous()
 		// Stop the catapult
 		catapult.move_velocity(0);
 
+		rightWing.set_value(false); // release matchload bar
+
+		chassis.turnTo(-28, -55, 3000, 75); 
+		chassis.moveTo(-28, -55, 3000, 170);
+		chassis.turnTo(32, -51, 3000, 75);
+		chassis.moveTo(32, -51, 3000, 75);
+		chassis.turnTo(50, -36, 3000, 75);
+		chassis.moveTo(50, -36, 3000, 170);
+		chassis.moveTo(50, -28, 3000, 170);
+		chassis.turnTo(7, -34, 3000,true ,75);
+		chassis.moveTo(7, -34, 3000, true, 170);
+		chassis.turnTo(36, -9, 3000, 75);
+		leftWing.set_value(true);
+		rightWing.set_value(true);
+		chassis.moveTo(36, -9, 3000, 170);
+		leftWing.set_value(false);
+		rightWing.set_value(false);
+		chassis.turnTo(3, -4, 3000, true, 75);
+		chassis.moveTo(3, -4, 3000, true, 170);
+		chassis.turnTo(40, 15, 3000, 75);
+		leftWing.set_value(true);
+		rightWing.set_value(true);
+		chassis.moveTo(41, 15, 3000, true, 170);
+		leftWing.set_value(false);
+		rightWing.set_value(false);
+		chassis.moveTo(24, 19, 3000, 170);
+
+		chassis.turnTo(39, 55, 3000, 75);
+		chassis.moveTo(39, 55, 3000, 170);
+
+		chassis.turnTo(48, 32, 3000, 75);
+		chassis.moveTo(48, 32, 3000, 170);
+
+		chassis.turnTo(9, 41, 3000, 75);
+		chassis.moveTo(9, 41, 3000, 170);
+
+
 
 
 		break;
@@ -409,6 +463,7 @@ void autonomous()
 		std::chrono::high_resolution_clock::now() - startTime);
 	std::cout << "Elapsed time: " << elapsedTime.count() << " milliseconds\n";
 	// chassis->stop();
+	disabled();
 }
 
 /**
