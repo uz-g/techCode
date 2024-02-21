@@ -4,6 +4,7 @@
 #include "lemlib/api.hpp"
 #include <iostream>
 #include <chrono>
+#include <cmath>
 
 #pragma
 
@@ -18,3 +19,5 @@ const int CATA_F = 9; //right not reversed
 const int ROTATION_V = 18; //vertical rotation sensor
 const int ROTATION_H = 19; //horizontal rotation sensor
 const int INERTIAL = 10;
+
+

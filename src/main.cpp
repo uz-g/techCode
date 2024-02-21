@@ -1,5 +1,4 @@
 #include "techLib.h"
-#include "lemlib/api.hpp"
 
 pros::Controller master(CONTROLLER_MASTER);
 
@@ -72,6 +71,40 @@ lemlib::ChassisController_t angularController{
 
 lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
+//drive curves
+int forwardCurve = 14.6; // Curve strength
+
+// Function to calculate the curve for tank drive
+int curveTankDrive(bool red, int input, double t) {
+    if (red) {
+        // Red curve calculation
+        // Modify this calculation as needed
+        return (std::exp(-t / 10) + std::exp((std::abs(input) - 127) / 10) * (1 - std::exp(-t / 10))) * input; // Default behavior if red curve is specified
+    } else {
+        // Blue curve calculation
+        return std::exp(((std::abs(input) - 127) * t) / 1000) * input;
+    }
+}		
+
+// Function to drive the robot using tank drive with curves
+void driveTankWithCurve(int leftInput, int rightInput) {
+    int leftVal = curveTankDrive(true, leftInput, forwardCurve);
+    int rightVal = curveTankDrive(true, rightInput, forwardCurve);
+
+    // Apply the calculated values to the left and right motors
+    leftMotors.move(leftVal);
+    rightMotors.move(rightVal);
+}
+
+void driveTankWithCurveReverse(int leftInput, int rightInput) {
+	int leftVal = curveTankDrive(true, leftInput, forwardCurve);
+    int rightVal = curveTankDrive(true, rightInput, forwardCurve);
+
+    // Apply the calculated values to the left and right motors
+    leftMotors.move(-rightVal);
+    rightMotors.move(-leftVal);
+}
+//auto selection [the state the the auton will be in]
 enum class autonState
 {
 	off,
@@ -422,16 +455,11 @@ void opcontrol()
 
 		if (reversed)
 		{
-			// leftStick *= -1;
-			// rightStick *= -1;
-
-			leftMotors.move(-rightStick);
-			rightMotors.move(-leftStick);
+			driveTankWithCurveReverse(leftStick, rightStick);
 		}
 		else if (!reversed)
 		{
-			leftMotors.move(leftStick);
-			rightMotors.move(rightStick);
+			driveTankWithCurve(leftStick, rightStick);
 		}
 
 		// wing controls
