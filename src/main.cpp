@@ -9,7 +9,7 @@ pros::Motor rF(RIGHT_MTR_F, pros::E_MOTOR_GEARSET_06); // right front motor
 pros::Motor rM(RIGHT_MTR_M, pros::E_MOTOR_GEARSET_06); // right middle motor
 pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
 
-pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36);	  // intake motor
+pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36);	  // cata motor
 pros::Motor cataF(CATA_F, pros::E_MOTOR_GEARSET_36); // catapult motor
 
 pros::MotorGroup leftMotors({lF, lM, lB});	// left motor group
@@ -348,7 +348,6 @@ void competition_initialize() {}
 void autonomous()
 {
 	setBrakeModeOf("chassis", "hold");
-	setBrakeModeOf("intake", "coast");
 	setBrakeModeOf("catapult", "hold");
 	auto startTime = std::chrono::high_resolution_clock::now();
 	
@@ -428,7 +427,6 @@ void autonomous()
 void opcontrol()
 {
 	setBrakeModeOf("chassis", "coast");
-	setBrakeModeOf("intake", "coast");
 	setBrakeModeOf("catapult", "hold");
 	master.rumble(".");
 
