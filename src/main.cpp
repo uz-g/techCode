@@ -31,26 +31,44 @@ lemlib::TrackingWheel verticalWheel(&rotationV, 2.75, 4.3, 1);
 lemlib::TrackingWheel horizontalWheel(&rotationH, 2.75, 4.3, 1);
 
 // drivetrain
-lemlib::Drivetrain_t drivetrain{
+lemlib::Drivetrain drivetrain{
 	&leftMotors,  // left drivetrain motors
 	&rightMotors, // right drivetrain motors
 	12.33,		  // track width
 	3.25,		  // wheel diameter
-	360			  // wheel rpm
+	360,		 // wheel rpm
+	0.5,		  // max chase
+
 };
 
 // sensors for odometry
-lemlib::OdomSensors_t sensors{
-	&verticalWheel,
-	nullptr,
-	&horizontalWheel,
-	nullptr,
-	&inertial};
+lemlib::OdomSensors sensors{
+	&verticalWheel, //vertical tracking wheel 1
+	nullptr, //vertical tracking wheel 2
+	&horizontalWheel, //horizontal tracking wheel
+	nullptr, //horizontal tracking wheel 2
+	&inertial}; 		//inertial sensor [imu]
 
+
+//conntrollerSettings requiremtns:
+/*
+@param 
+		 * @param kP proportional constant for the chassis controller
+         * @param kI integral constant for the chassis controller
+         * @param kD derivative constant for the chassis controller
+         * @param antiWindup
+         * @param smallError the error at which the chassis controller will switch to a slower control loop
+         * @param smallErrorTimeout the time the chassis controller will wait before switching to a slower control loop
+         * @param largeError the error at which the chassis controller will switch to a faster control loop
+         * @param largeErrorTimeout the time the chassis controller will wait before switching to a faster control loop
+         * @param slew the maximum acceleration of the chassis controller
+*/
 // forward/backward PID
-lemlib::ChassisController_t lateralController{
-	8,	 // kP
-	30,	 // kD
+lemlib::ControllerSettings lateralController{
+	8.000,	 // kP
+	0.000,	 // kI
+	30.000,	 // kD
+	0.000,	 // antiWindup
 	1,	 // smallErrorRange
 	100, // smallErrorTimeout
 	3,	 // largeErrorRange
@@ -59,15 +77,18 @@ lemlib::ChassisController_t lateralController{
 };
 
 // turning PID
-lemlib::ChassisController_t angularController{
-	4,	 // kP
-	40,	 // kD
+lemlib::ControllerSettings angularController{
+	8.000,	 // kP
+	0.000,	 // kI
+	30.000,	 // kD
+	0.000,	 // antiWindup
 	1,	 // smallErrorRange
 	100, // smallErrorTimeout
 	3,	 // largeErrorRange
 	500, // largeErrorTimeout
-	40	 // slew rate
+	5	 // slew rate
 };
+
 
 lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
@@ -93,8 +114,8 @@ int curveTankDrive(bool red, int input, double t)
 // Function to drive the robot using tank drive with curves
 void driveTankWithCurve(int leftInput, int rightInput)
 {
-	int leftVal = curveTankDrive(true, leftInput, forwardCurve);
-	int rightVal = curveTankDrive(true, rightInput, forwardCurve);
+	int leftVal = curveTankDrive(false, leftInput, forwardCurve);
+	int rightVal = curveTankDrive(false, rightInput, forwardCurve);
 
 	// Apply the calculated values to the left and right motors
 	leftMotors.move(leftVal);
@@ -368,16 +389,17 @@ void autonomous()
 		// opponent goalside auton
 
 		chassis.setPose(-48, -72, 0);			  // starting position
-		chassis.moveTo(-48, -50, 1000, 170);	  // drive forward
+		chassis.moveToPoint(-48, -50, 1000, 170);	  // drive forward
 		chassis.turnTo(-67, -32, 1000, 75);		  // turn to the left
-		chassis.moveTo(-67, -32, 2000, 170);	  // drive to the left and push ball in goal
+		chassis.moveToPoint(-67, -32, 2000, 170);	  // drive to the left and push ball in goal
 		chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
-		chassis.moveTo(-67, -26, 1000, 150);
-		chassis.moveTo(-67, -32, 1000, 170); // push ball in goal forwards
+		chassis.moveToPoint(-67, -26, 1000, 150);
+		chassis.moveToPoint(-67, -32, 1000, 170); // push ball in goal forwards
 		chassis.turnTo(-27, -67, 1000, 75);	 // turn to the right
-		chassis.moveTo(-27, -67, 2000, 170);
+		chassis.moveToPoint(-27, -67, 2000, 170);
 		chassis.turnTo(-15, -67, 1000, 75);
-		chassis.moveTo(-15, -67, 1000, 170); // touch horizontal bar
+		chassis.moveToPoint(-15, -67, 1000, 170); // touch horizontal bar
+	
 
 		break;
 
@@ -385,7 +407,7 @@ void autonomous()
 		// ally goalside auton
 		chassis.setPose(0, 0, 0); // starting position
 
-		chassis.moveTo(0, 10, 1000, 127); // lateral controller pid tuning command
+		chassis.moveToPoint(0, 10, 1000, 127); // lateral controller pid tuning command
 
 		// chassis.turnTo(0, 30, 1000, 127); //angular controller pid tuning command
 
@@ -395,11 +417,11 @@ void autonomous()
 
 		chassis.setPose(-48, -72, 0); // starting position
 
-		chassis.moveTo(-42, -40, 1000, 170); // drive forward
+		chassis.moveToPoint(-42, -40, 1000, 170); // drive forward
 
 		chassis.turnTo(-70, -32, 1000, true, 75); // turn to the left and backwards
 
-		chassis.moveTo(-70, -32, 1000, 170); // drive forward
+		chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
 
 		rightWing.set_value(true); // hold on to matchload bar
 		chassis.turnTo(28, -24, 1000, 75); // turn to the left
@@ -420,41 +442,38 @@ void autonomous()
 		rightWing.set_value(false); // release matchload bar
 
 		chassis.turnTo(-28, -55, 3000, 75); 
-		chassis.moveTo(-28, -55, 3000, 170);
+		chassis.moveToPoint(-28, -55, 3000, 170);
 		chassis.turnTo(32, -51, 3000, 75);
-		chassis.moveTo(32, -51, 3000, 75);
+		chassis.moveToPoint(32, -51, 3000, 75);
 		chassis.turnTo(50, -36, 3000, 75);
-		chassis.moveTo(50, -36, 3000, 170);
-		chassis.moveTo(50, -28, 3000, 170);
+		chassis.moveToPoint(50, -36, 3000, 170);
+		chassis.moveToPoint(50, -28, 3000, 170);
 		chassis.turnTo(7, -34, 3000,true ,75);
-		chassis.moveTo(7, -34, 3000, true, 170);
+		chassis.moveToPoint(7, -34, 3000, true, 170);
 		chassis.turnTo(36, -9, 3000, 75);
 		leftWing.set_value(true);
 		rightWing.set_value(true);
-		chassis.moveTo(36, -9, 3000, 170);
+		chassis.moveToPoint(36, -9, 3000, 170);
 		leftWing.set_value(false);
 		rightWing.set_value(false);
 		chassis.turnTo(3, -4, 3000, true, 75);
-		chassis.moveTo(3, -4, 3000, true, 170);
+		chassis.moveToPoint(3, -4, 3000, true, 170);
 		chassis.turnTo(40, 15, 3000, 75);
 		leftWing.set_value(true);
 		rightWing.set_value(true);
-		chassis.moveTo(41, 15, 3000, true, 170);
+		chassis.moveToPoint(41, 15, 3000, true, 170);
 		leftWing.set_value(false);
 		rightWing.set_value(false);
-		chassis.moveTo(24, 19, 3000, 170);
+		chassis.moveToPoint(24, 19, 3000, 170);
 
 		chassis.turnTo(39, 55, 3000, 75);
-		chassis.moveTo(39, 55, 3000, 170);
+		chassis.moveToPoint(39, 55, 3000, 170);
 
 		chassis.turnTo(48, 32, 3000, 75);
-		chassis.moveTo(48, 32, 3000, 170);
+		chassis.moveToPoint(48, 32, 3000, 170);
 
 		chassis.turnTo(9, 41, 3000, 75);
-		chassis.moveTo(9, 41, 3000, 170);
-
-
-
+		chassis.moveToPoint(9, 41, 3000, 170);
 
 		break;
 	}
@@ -508,11 +527,11 @@ void opcontrol()
 
 		if (reversed)
 		{
-			driveTankWithCurveReverse(leftStick, rightStick);
+			chassis.tank(-rightStick, -leftStick);
 		}
 		else if (!reversed)
 		{
-			driveTankWithCurve(leftStick, rightStick);
+			chassis.tank(leftStick, rightStick);
 		}
 
 		// wing controls
