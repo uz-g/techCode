@@ -1,10 +1,15 @@
 #include "techLib.h"
 
+using namespace lemlib;
+
 pros::Controller master(CONTROLLER_MASTER);
 
-pros::Motor lF(-LEFT_MTR_F, pros::E_MOTOR_GEARSET_06); // left front motor. reversed
-pros::Motor lM(-LEFT_MTR_M, pros::E_MOTOR_GEARSET_06); // left middle motor. reversed
-pros::Motor lB(-LEFT_MTR_B, pros::E_MOTOR_GEARSET_06); // left back motor. reversed
+pros::Motor lF(-LEFT_MTR_F,
+               pros::E_MOTOR_GEARSET_06); // left front motor. reversed
+pros::Motor lM(-LEFT_MTR_M,
+               pros::E_MOTOR_GEARSET_06); // left middle motor. reversed
+pros::Motor lB(-LEFT_MTR_B,
+               pros::E_MOTOR_GEARSET_06); // left back motor. reversed
 pros::Motor rF(RIGHT_MTR_F, pros::E_MOTOR_GEARSET_06); // right front motor
 pros::Motor rM(RIGHT_MTR_M, pros::E_MOTOR_GEARSET_06); // right middle motor
 pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
@@ -12,14 +17,14 @@ pros::Motor rB(RIGHT_MTR_B, pros::E_MOTOR_GEARSET_06); // right back motor
 pros::Motor cataR(-CATA_R, pros::E_MOTOR_GEARSET_36); // cata motor
 pros::Motor cataF(CATA_F, pros::E_MOTOR_GEARSET_36);  // catapult motor
 
-pros::MotorGroup leftMotors({lF, lM, lB});	// left motor group
+pros::MotorGroup leftMotors({lF, lM, lB});  // left motor group
 pros::MotorGroup rightMotors({rF, rM, rB}); // right motor group
 
 pros::MotorGroup catapult({cataF, cataR}); // catapult motor group
 
 // sensors
-pros::Imu inertial(INERTIAL);				// inertial sensor
-pros::Rotation rotationV(ROTATION_V);		// left rotation sensor
+pros::Imu inertial(INERTIAL);               // inertial sensor
+pros::Rotation rotationV(ROTATION_V);       // left rotation sensor
 pros::Rotation rotationH(ROTATION_H, true); // middle rotation sensor, reversed
 
 // pneumatics
@@ -32,227 +37,190 @@ lemlib::TrackingWheel horizontalWheel(&rotationH, 2.75, 4.3, 1);
 
 // drivetrain
 lemlib::Drivetrain drivetrain{
-	&leftMotors,  // left drivetrain motors
-	&rightMotors, // right drivetrain motors
-	12.33,		  // track width
-	3.25,		  // wheel diameter
-	360,		  // wheel rpm
-	0.5,		  // max chase
+    &leftMotors,  // left drivetrain motors
+    &rightMotors, // right drivetrain motors
+    12.33,        // track width
+    3.25,         // wheel diameter
+    360,          // wheel rpm
+    0.5,          // max chase
 
 };
 
 // sensors for odometry
-lemlib::OdomSensors sensors{
-	nullptr,	// vertical tracking wheel 1
-	nullptr,	// vertical tracking wheel 2
-	nullptr,	// horizontal tracking wheel
-	nullptr,	// horizontal tracking wheel 2
-	&inertial}; // inertial sensor [imu]
+lemlib::OdomSensors sensors{nullptr,    // vertical tracking wheel 1
+                            nullptr,    // vertical tracking wheel 2
+                            nullptr,    // horizontal tracking wheel
+                            nullptr,    // horizontal tracking wheel 2
+                            &inertial}; // inertial sensor [imu]
 
 // conntrollerSettings requiremtns:
 /*
 @param
-		 * @param kP proportional constant for the chassis controller
-		 * @param kI integral constant for the chassis controller
-		 * @param kD derivative constant for the chassis controller
-		 * @param antiWindup
-		 * @param smallError the error at which the chassis controller will switch to a slower control loop
-		 * @param smallErrorTimeout the time the chassis controller will wait before switching to a slower control loop
-		 * @param largeError the error at which the chassis controller will switch to a faster control loop
-		 * @param largeErrorTimeout the time the chassis controller will wait before switching to a faster control loop
-		 * @param slew the maximum acceleration of the chassis controller
+                 * @param kP proportional constant for the chassis controller
+                 * @param kI integral constant for the chassis controller
+                 * @param kD derivative constant for the chassis controller
+                 * @param antiWindup
+                 * @param smallError the error at which the chassis controller
+will switch to a slower control loop
+                 * @param smallErrorTimeout the time the chassis controller will
+wait before switching to a slower control loop
+                 * @param largeError the error at which the chassis controller
+will switch to a faster control loop
+                 * @param largeErrorTimeout the time the chassis controller will
+wait before switching to a faster control loop
+                 * @param slew the maximum acceleration of the chassis
+controller
 */
 // forward/backward PID
 lemlib::ControllerSettings lateralController{
-	8.000,	// kP
-	0.000,	// kI
-	30.000, // kD
-	0.000,	// antiWindup
-	1,		// smallErrorRange
-	100,	// smallErrorTimeout
-	3,		// largeErrorRange
-	500,	// largeErrorTimeout
-	5		// slew rate
+    8.000,  // kP
+    0.000,  // kI
+    30.000, // kD
+    0.000,  // antiWindup
+    1,      // smallErrorRange
+    100,    // smallErrorTimeout
+    3,      // largeErrorRange
+    500,    // largeErrorTimeout
+    5       // slew rate
 };
 
 // turning PID
 lemlib::ControllerSettings angularController{
-	8.000,	// kP
-	0.000,	// kI
-	30.000, // kD
-	0.000,	// antiWindup
-	1,		// smallErrorRange
-	100,	// smallErrorTimeout
-	3,		// largeErrorRange
-	500,	// largeErrorTimeout
-	5		// slew rate
+    8.000,  // kP
+    0.000,  // kI
+    30.000, // kD
+    0.000,  // antiWindup
+    1,      // smallErrorRange
+    100,    // smallErrorTimeout
+    3,      // largeErrorRange
+    500,    // largeErrorTimeout
+    5       // slew rate
 };
 
-lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
+lemlib::Chassis chassis(drivetrain, lateralController, angularController,
+                        sensors);
 
 // auto selection [the state the the auton will be in]
-enum class autonState
-{
-	off,
-	closeSide, // close side is the side where the opponents goal / offensive zone is
-	farSide,   // far side is the side where the ally / team goal / offensive zone is
-	skills
+enum class autonState {
+  off,
+  closeSide, // close side is the side where the opponents goal / offensive zone
+             // is
+  farSide,   // far side is the side where the ally / team goal / offensive zone
+             // is
+  skills
 };
 autonState autonSelection = autonState::off;
 
-static const char *btnmMap[] = {"far side", "close side", "skills", ""}; // button matrix map for auton selection
+static const char *btnmMap[] = {"far side", "close side", "skills",
+                                ""}; // button matrix map for auton selection
 
-static lv_res_t autonBtnmAction(lv_obj_t *btnm, const char *txt) // button matrix action for auton selection
+static lv_res_t
+autonBtnmAction(lv_obj_t *btnm,
+                const char *txt) // button matrix action for auton selection
 {
-	if (lv_obj_get_free_num(btnm) == 100)
-	{ 
-		if (txt == "far side")
-		{
-			master.rumble("._");
+  if (lv_obj_get_free_num(btnm) == 100) {
+    if (std::string(txt) == "far side") {
+      master.rumble("._");
 
-			autonSelection = autonState::farSide;
-		}
-		else if (txt == "close side")
-		{
-			master.rumble(".. _");
+      autonSelection = autonState::farSide;
+    } else if (std::string(txt) == "close side") { // original working code was
+                                                   // : txt == "close side"
+      master.rumble(".. _");
 
-			autonSelection = autonState::closeSide;
-		}
-		else if (txt == "skills")
-		{
-			master.rumble("_._");
+      autonSelection = autonState::closeSide;
+    } else if (std::string(txt) == "skills") {
+      master.rumble("_._");
 
-			autonSelection = autonState::skills;
-		}
-	}
+      autonSelection = autonState::skills;
+    }
+  }
 
-	return LV_RES_OK; // return OK because the button matrix is not deleted
+  return LV_RES_OK; // return OK because the button matrix is not deleted
 }
 
-// make a function to set the brake mode of the motors by requesting the name of motors and the mode of the brake,
+// make a function to set the brake mode of the motors by requesting the name of
+// motors and the mode of the brake,
 //  when requesting this stuff use strings and if statements
-void setBrakeModeOf(std::string motorName, std::string brakeMode)
-{
-	if (motorName == "left")
-	{
-		if (brakeMode == "coast")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
-	else if (motorName == "right")
-	{
-		if (brakeMode == "coast")
-		{
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
-	else if (motorName == "chassis")
-	{
-		if (brakeMode == "coast")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			lF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			lM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			lB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			rF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			rM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
-	else if (motorName == "cataR")
-	{
-		if (brakeMode == "coast")
-		{
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
-	else if (motorName == "cataF")
-	{
-		if (brakeMode == "coast")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
-	else if (motorName == "catapult")
-	{
-		if (brakeMode == "coast")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-		}
-		else if (brakeMode == "brake")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-		}
-		else if (brakeMode == "hold")
-		{
-			cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-			cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-		}
-	}
+void setBrakeModeOf(std::string motorName, std::string brakeMode) {
+  if (motorName == "left") {
+    if (brakeMode == "coast") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  } else if (motorName == "right") {
+    if (brakeMode == "coast") {
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  } else if (motorName == "chassis") {
+    if (brakeMode == "coast") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      lF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      lM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      lB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      rF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      rM.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      rB.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  } else if (motorName == "cataR") {
+    if (brakeMode == "coast") {
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  } else if (motorName == "cataF") {
+    if (brakeMode == "coast") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  } else if (motorName == "catapult") {
+    if (brakeMode == "coast") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    } else if (brakeMode == "brake") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+    } else if (brakeMode == "hold") {
+      cataF.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+      cataR.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    }
+  }
 }
 
 /**
@@ -269,46 +237,45 @@ void setBrakeModeOf(std::string motorName, std::string brakeMode)
  * to keep execution time for this mode under a few seconds.
  */
 
-void initialize()
-{
+void initialize() {
 
-	// djmango korvex gui stuff
+  // djmango korvex gui stuff
 
-	lv_theme_t *th = lv_theme_alien_init(300, NULL); // Set a HUE value and keep font default MAGENTA
-	lv_theme_set_current(th);
+  lv_theme_t *th = lv_theme_alien_init(
+      300, NULL); // Set a HUE value and keep font default MAGENTA
+  lv_theme_set_current(th);
 
-	// create a tab view object
-	std::cout << pros::millis() << ": creating gui..." << std::endl;
-	lv_obj_t *tabview = lv_tabview_create(lv_scr_act(), NULL);
+  // create a tab view object
+  std::cout << pros::millis() << ": creating gui..." << std::endl;
+  lv_obj_t *tabview = lv_tabview_create(lv_scr_act(), NULL);
 
-	// add 4 tabs (the tabs are page (lv_page) and can be scrolled
-	lv_obj_t *mainTab = lv_tabview_add_tab(tabview, "Autons");
+  // add 4 tabs (the tabs are page (lv_page) and can be scrolled
+  lv_obj_t *mainTab = lv_tabview_add_tab(tabview, "Autons");
 
-	// main tab
-	lv_obj_t *mainBtnm = lv_btnm_create(mainTab, NULL);
-	lv_btnm_set_map(mainBtnm, btnmMap);
-	lv_btnm_set_action(mainBtnm, autonBtnmAction);
-	lv_obj_set_size(mainBtnm, 450, 50);
-	lv_btnm_set_toggle(mainBtnm, true, 3);
-	lv_obj_set_pos(mainBtnm, 0, 100);
-	lv_obj_align(mainBtnm, NULL, LV_ALIGN_CENTER, 0, 0);
-	lv_obj_set_free_num(mainBtnm, 100);
+  // main tab
+  lv_obj_t *mainBtnm = lv_btnm_create(mainTab, NULL);
+  lv_btnm_set_map(mainBtnm, btnmMap);
+  lv_btnm_set_action(mainBtnm, autonBtnmAction);
+  lv_obj_set_size(mainBtnm, 450, 50);
+  lv_btnm_set_toggle(mainBtnm, true, 3);
+  lv_obj_set_pos(mainBtnm, 0, 100);
+  lv_obj_align(mainBtnm, NULL, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_free_num(mainBtnm, 100);
 
-	chassis.calibrate(); // calibrate the chassis and imu stuff
+  chassis.calibrate(); // calibrate the chassis and imu stuff
 }
 /**
  * Runs while the robot is in the disabled state of Field Management System or
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled()
-{
-	leftMotors.move_velocity(0);
-	rightMotors.move_velocity(0);
-	cataR.move_velocity(0);
-	cataF.move_velocity(0);
-	leftWing.set_value(false);
-	rightWing.set_value(false);
+void disabled() {
+  leftMotors.move_velocity(0);
+  rightMotors.move_velocity(0);
+  cataR.move_velocity(0);
+  cataF.move_velocity(0);
+  leftWing.set_value(false);
+  rightWing.set_value(false);
 }
 
 /**
@@ -333,115 +300,120 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous()
-{
-	setBrakeModeOf("chassis", "hold");
-	setBrakeModeOf("catapult", "hold");
-	auto startTime = std::chrono::high_resolution_clock::now();
+void autonomous() {
+  setBrakeModeOf("chassis", "hold");
+  setBrakeModeOf("catapult", "hold");
+  auto startTime = std::chrono::high_resolution_clock::now();
 
-	if (autonSelection == autonState::off)
-		autonSelection = autonState::skills; // use skills [the main focus] if we havent selected an auton just in case
+  if (autonSelection == autonState::off)
+    autonSelection =
+        autonState::skills; // use skills [the main focus] if we havent selected
+                            // an auton just in case
 
-	switch (autonSelection)
-	{
-	case autonState::closeSide:
-		// opponent goalside auton
+  switch (autonSelection) {
+  case autonState::closeSide:
+    // opponent goalside auton
 
-		chassis.setPose(-48, -72, 0);			  // starting position
-		chassis.moveToPoint(-48, -50, 1000, 170); // drive forward
-		chassis.turnTo(-67, -32, 1000, 75);		  // turn to the left
-		chassis.moveToPoint(-67, -32, 2000, 170); // drive to the left and push ball in goal
-		chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
-		chassis.moveToPoint(-67, -26, 1000, 150);
-		chassis.moveToPoint(-67, -32, 1000, 170); // push ball in goal forwards
-		chassis.turnTo(-27, -67, 1000, 75);		  // turn to the right
-		chassis.moveToPoint(-27, -67, 2000, 170);
-		chassis.turnTo(-15, -67, 1000, 75);
-		chassis.moveToPoint(-15, -67, 1000, 170); // touch horizontal bar
+    chassis.setPose(-48, -72, 0);             // starting position
+    chassis.moveToPoint(-48, -50, 1000, 170); // drive forward
+    chassis.turnTo(-67, -32, 1000, 75);       // turn to the left
+    chassis.moveToPoint(-67, -32, 2000,
+                        170); // drive to the left and push ball in goal
+    chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
+    chassis.moveToPoint(-67, -26, 1000, 150);
+    chassis.moveToPoint(-67, -32, 1000, 170); // push ball in goal forwards
+    chassis.turnTo(-27, -67, 1000, 75);       // turn to the right
+    chassis.moveToPoint(-27, -67, 2000, 170);
+    chassis.turnTo(-15, -67, 1000, 75);
+    chassis.moveToPoint(-15, -67, 1000, 170); // touch horizontal bar
 
-		break;
+    break;
 
-	case autonState::farSide:
-		// ally goalside auton
-		chassis.setPose(0, 0, 0); // starting position
+  case autonState::farSide:
+    // ally goalside auton
+    chassis.setPose(0, 0, 0); // starting position
 
-		chassis.moveToPoint(0, 10, 1000, 127); // lateral controller pid tuning command
+    chassis.moveToPoint(0, 10, 1000,
+                        127); // lateral controller pid tuning command
 
-		// chassis.turnTo(0, 30, 1000, 127); //angular controller pid tuning command
+    // chassis.turnTo(0, 30, 1000, 127); //angular controller pid tuning command
 
-		break;
+    break;
 
-	case autonState::skills:
+  case autonState::off:
+    break;
 
-		chassis.setPose(-48, -72, 0); // starting position
+  case autonState::skills:
 
-		chassis.moveToPoint(-42, -40, 1000, 170); // drive forward
+    chassis.setPose(-48, -72, 0); // starting position
 
-		chassis.turnTo(-70, -32, 1000, true, 75); // turn to the left and backwards
+    chassis.moveToPoint(-42, -40, 1000, 170); // drive forward
 
-		chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
+    chassis.turnTo(-70, -32, 1000, true, 75); // turn to the left and backwards
 
-		rightWing.set_value(true);		   // hold on to matchload bar
-		setBrakeModeOf("chassis", "hold"); // hold the catapult
-		chassis.turnTo(28, -24, 1000, 75); // turn to the left
+    chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
 
-		auto markTime = std::chrono::high_resolution_clock::now();
+    rightWing.set_value(true);         // hold on to matchload bar
+    setBrakeModeOf("chassis", "hold"); // hold the catapult
+    chassis.turnTo(28, -24, 1000, 75); // turn to the left
 
-		// Loop for 40 seconds from the mark
-		while (std::chrono::duration_cast<std::chrono::seconds>(
-				   std::chrono::high_resolution_clock::now() - markTime)
-				   .count() < 35)
-		{
-			catapult.move_velocity(100); // Start the catapult for time
-		}
+    auto markTime = std::chrono::high_resolution_clock::now();
 
-		// Stop the catapult
-		catapult.move_velocity(0);
+    // Loop for 40 seconds from the mark
+    while (std::chrono::duration_cast<std::chrono::seconds>(
+               std::chrono::high_resolution_clock::now() - markTime)
+               .count() < 35) {
+      catapult.move_velocity(100); // Start the catapult for time
+    }
 
-		rightWing.set_value(false); // release matchload bar
+    // Stop the catapult
+    catapult.move_velocity(0);
 
-		chassis.turnTo(-28, -55, 3000, 75);
-		chassis.moveToPoint(-28, -55, 3000, 170);
-		chassis.turnTo(32, -51, 3000, 75);
-		chassis.moveToPoint(32, -51, 3000, 75);
-		chassis.turnTo(50, -36, 3000, 75);
-		chassis.moveToPoint(50, -36, 3000, 170);
-		chassis.moveToPoint(50, -28, 3000, 170);
-		chassis.turnTo(7, -34, 3000, true, 75);
-		chassis.moveToPoint(7, -34, 3000, true, 170);
-		chassis.turnTo(36, -9, 3000, 75);
-		leftWing.set_value(true);
-		rightWing.set_value(true);
-		chassis.moveToPoint(36, -9, 3000, 170);
-		leftWing.set_value(false);
-		rightWing.set_value(false);
-		chassis.turnTo(3, -4, 3000, true, 75);
-		chassis.moveToPoint(3, -4, 3000, true, 170);
-		chassis.turnTo(40, 15, 3000, 75);
-		leftWing.set_value(true);
-		rightWing.set_value(true);
-		chassis.moveToPoint(41, 15, 3000, true, 170);
-		leftWing.set_value(false);
-		rightWing.set_value(false);
-		chassis.moveToPoint(24, 19, 3000, 170);
+    rightWing.set_value(false); // release matchload bar
 
-		chassis.turnTo(39, 55, 3000, 75);
-		chassis.moveToPoint(39, 55, 3000, 170);
+    chassis.turnTo(-28, -55, 3000, 75);
+    chassis.moveToPoint(-28, -55, 3000, 170);
+    chassis.turnTo(32, -51, 3000, 75);
+    chassis.moveToPoint(32, -51, 3000, 75);
+    chassis.turnTo(50, -36, 3000, 75);
+    chassis.moveToPoint(50, -36, 3000, 170);
+    chassis.moveToPoint(50, -28, 3000, 170);
+    chassis.turnTo(7, -34, 3000, true, 75);
+    chassis.moveToPoint(7, -34, 3000, true, 170);
+    chassis.turnTo(36, -9, 3000, 75);
+    leftWing.set_value(true);
+    rightWing.set_value(true);
+    chassis.moveToPoint(36, -9, 3000, 170);
+    leftWing.set_value(false);
+    rightWing.set_value(false);
+    chassis.turnTo(3, -4, 3000, true, 75);
+    chassis.moveToPoint(3, -4, 3000, true, 170);
+    chassis.turnTo(40, 15, 3000, 75);
+    leftWing.set_value(true);
+    rightWing.set_value(true);
+    chassis.moveToPoint(41, 15, 3000, true, 170);
+    leftWing.set_value(false);
+    rightWing.set_value(false);
+    chassis.moveToPoint(24, 19, 3000, 170);
 
-		chassis.turnTo(48, 32, 3000, 75);
-		chassis.moveToPoint(48, 32, 3000, 170);
+    chassis.turnTo(39, 55, 3000, 75);
+    chassis.moveToPoint(39, 55, 3000, 170);
 
-		chassis.turnTo(9, 41, 3000, 75);
-		chassis.moveToPoint(9, 41, 3000, 170);
+    chassis.turnTo(48, 32, 3000, 75);
+    chassis.moveToPoint(48, 32, 3000, 170);
 
-		break;
-	}
+    chassis.turnTo(9, 41, 3000, 75);
+    chassis.moveToPoint(9, 41, 3000, 170);
 
-	auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-		std::chrono::high_resolution_clock::now() - startTime);
-	std::cout << "Elapsed time: " << elapsedTime.count() << " milliseconds\n";
-	// chassis->stop();
-	disabled();
+    break;
+  }
+
+  auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::high_resolution_clock::now() - startTime);
+
+  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+            << ": auton took " << elapsedTime.count() << " milliseconds" << std::endl;
+  disabled();
 }
 
 /**
@@ -457,129 +429,113 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol()
-{
-	setBrakeModeOf("chassis", "coast");
-	setBrakeModeOf("catapult", "hold");
-	master.rumble(".");
-	// new timer
-	auto startTime = std::chrono::high_resolution_clock::now();
-	bool reversed = false;
+void opcontrol() {
+  setBrakeModeOf("chassis", "coast");
+  setBrakeModeOf("catapult", "hold");
+  master.rumble(".");
+  // new timer
+  auto startTime = std::chrono::high_resolution_clock::now();
+  bool reversed = false;
 
-	bool leftWingState = false;
+  bool leftWingState = false;
 
-	bool rightWingState = false;
+  bool rightWingState = false;
 
-	bool intakeToggled = false;
+  bool intakeToggled = false;
 
-	bool launcherToggle = false;
+  bool launcherToggle = false;
 
-	while (true)
-	{
+  while (true) {
 
-		if (master.get_digital_new_press(DIGITAL_X))
-		{
-			reversed = !reversed;
-		}
+    if (master.get_digital_new_press(DIGITAL_X)) {
+      reversed = !reversed;
+    }
 
-		double leftStick = master.get_analog(ANALOG_LEFT_Y);
-		double rightStick = master.get_analog(ANALOG_RIGHT_Y);
+    double leftStick = master.get_analog(ANALOG_LEFT_Y);
+    double rightStick = master.get_analog(ANALOG_RIGHT_Y);
 
-		if (reversed)
-		{
-			chassis.tank(-rightStick, -leftStick);
-		}
-		else if (!reversed)
-		{
-			chassis.tank(leftStick, rightStick);
-		}
+    if (reversed) {
+      chassis.tank(-rightStick, -leftStick, 17);
+    } else if (!reversed) {
+      // lemlib drive curve
+      // input, input, scale
 
-		// wing controls
-		if (master.get_digital_new_press(DIGITAL_L1))
-		{ // Left wing
-			leftWingState = !leftWingState;
-			leftWing.set_value(leftWingState);
-		}
-		else if (master.get_digital_new_press(DIGITAL_R1))
-		{ // Right wing
-			rightWingState = !rightWingState;
-			rightWing.set_value(rightWingState);
-		}
+      chassis.tank(leftStick, rightStick, 17);
+    }
 
-		else if (master.get_digital_new_press(DIGITAL_L2))
-		{ // Both wings
-			leftWingState = !leftWingState;
-			rightWingState = leftWingState;
-			leftWing.set_value(leftWingState);
-			rightWing.set_value(rightWingState);
-		}
+    // wing controls
+    if (master.get_digital_new_press(DIGITAL_L1)) { // Left wing
+      leftWingState = !leftWingState;
+      leftWing.set_value(leftWingState);
+    } else if (master.get_digital_new_press(DIGITAL_R1)) { // Right wing
+      rightWingState = !rightWingState;
+      rightWing.set_value(rightWingState);
+    }
 
-		// // intake controls - no more intake
-		// if (master.get_digital(DIGITAL_R2))
-		// {
-		// 	intake.move_velocity(200);
-		// }
-		// else if (master.get_digital(DIGITAL_DOWN))
-		// {
-		// 	intake.move_velocity(-200);
-		// }
-		// else if (master.get_digital_new_press(DIGITAL_UP))
-		// {
-		// 	intakeToggled = !intakeToggled;
-		// }
-		// else if (intakeToggled)
-		// {
-		// 	intake.move_velocity(200);
-		// }
-		// else if (!intakeToggled)
-		// {
-		// 	intake.move_velocity(0);
-		// }
+    else if (master.get_digital_new_press(DIGITAL_L2)) { // Both wings
+      leftWingState = !leftWingState;
+      rightWingState = leftWingState;
+      leftWing.set_value(leftWingState);
+      rightWing.set_value(rightWingState);
+    }
 
-		// catapult controls
-		if (master.get_digital(DIGITAL_A))
-		{
-			setBrakeModeOf("catapult", "hold");
+    // // intake controls - no more intake
+    // if (master.get_digital(DIGITAL_R2))
+    // {
+    // 	intake.move_velocity(200);
+    // }
+    // else if (master.get_digital(DIGITAL_DOWN))
+    // {
+    // 	intake.move_velocity(-200);
+    // }
+    // else if (master.get_digital_new_press(DIGITAL_UP))
+    // {
+    // 	intakeToggled = !intakeToggled;
+    // }
+    // else if (intakeToggled)
+    // {
+    // 	intake.move_velocity(200);
+    // }
+    // else if (!intakeToggled)
+    // {
+    // 	intake.move_velocity(0);
+    // }
 
-			catapult.move_velocity(47);
-		}
-		else if (master.get_digital_new_press(DIGITAL_Y))
-		{
-			launcherToggle = !launcherToggle;
-		}
-		else if (launcherToggle)
-		{
-			setBrakeModeOf("catapult", "hold");
-			setBrakeModeOf("chassis", "hold"); //hold the chassis im place when matchloading to prevent shock and to prevent pushing
-			catapult.move_velocity(47);
-		}
-		else if (!launcherToggle)
-		{
-			catapult.move_velocity(0);
-			setBrakeModeOf("chassis", "coast");
-			setBrakeModeOf("catapult", "coast");
-		}
+    // catapult controls
+    if (master.get_digital(DIGITAL_A)) {
+      setBrakeModeOf("catapult", "hold");
 
-		if (master.get_digital_new_press(DIGITAL_B))
-		{
-			setBrakeModeOf("catapult", "coast");
-		}
+      catapult.move_velocity(47);
+    } else if (master.get_digital_new_press(DIGITAL_Y)) {
+      launcherToggle = !launcherToggle;
+    } else if (launcherToggle) {
+      setBrakeModeOf("catapult", "hold");
+      setBrakeModeOf("chassis",
+                     "hold"); // hold the chassis im place when matchloading to
+                              // prevent shock and to prevent pushing
+      catapult.move_velocity(47);
+    } else if (!launcherToggle) {
+      catapult.move_velocity(0);
+      setBrakeModeOf("chassis", "coast");
+      setBrakeModeOf("catapult", "coast");
+    }
 
-		// timer stuff
+    if (master.get_digital_new_press(DIGITAL_B)) {
+      setBrakeModeOf("catapult", "coast");
+    }
 
-		if (std::chrono::duration_cast<std::chrono::seconds>(
-				std::chrono::high_resolution_clock::now() - startTime)
-				.count() >= 75)
-		{
-			master.set_text(0, 0, "30s left");
-		}
-		else if (std::chrono::duration_cast<std::chrono::seconds>(
-					 std::chrono::high_resolution_clock::now() - startTime)
-					 .count() >= 105)
-		{
-			master.set_text(0, 0, "15s left");
-		}
+    // timer stuff
 
-		pros::delay(10); // run this stuff than wait 20 ms
-	}
+    if (std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::high_resolution_clock::now() - startTime)
+            .count() >= 75) {
+      master.set_text(0, 0, "30s left");
+    } else if (std::chrono::duration_cast<std::chrono::seconds>(
+                   std::chrono::high_resolution_clock::now() - startTime)
+                   .count() >= 105) {
+      master.set_text(0, 0, "15s left");
+    }
+
+    pros::delay(10); // run this stuff than wait 20 ms
+  }
 }
