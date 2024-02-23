@@ -36,101 +36,60 @@ lemlib::Drivetrain drivetrain{
 	&rightMotors, // right drivetrain motors
 	12.33,		  // track width
 	3.25,		  // wheel diameter
-	360,		 // wheel rpm
+	360,		  // wheel rpm
 	0.5,		  // max chase
 
 };
 
 // sensors for odometry
 lemlib::OdomSensors sensors{
-	&verticalWheel, //vertical tracking wheel 1
-	nullptr, //vertical tracking wheel 2
-	&horizontalWheel, //horizontal tracking wheel
-	nullptr, //horizontal tracking wheel 2
-	&inertial}; 		//inertial sensor [imu]
+	&verticalWheel,	  // vertical tracking wheel 1
+	nullptr,		  // vertical tracking wheel 2
+	&horizontalWheel, // horizontal tracking wheel
+	nullptr,		  // horizontal tracking wheel 2
+	&inertial};		  // inertial sensor [imu]
 
-
-//conntrollerSettings requiremtns:
+// conntrollerSettings requiremtns:
 /*
-@param 
+@param
 		 * @param kP proportional constant for the chassis controller
-         * @param kI integral constant for the chassis controller
-         * @param kD derivative constant for the chassis controller
-         * @param antiWindup
-         * @param smallError the error at which the chassis controller will switch to a slower control loop
-         * @param smallErrorTimeout the time the chassis controller will wait before switching to a slower control loop
-         * @param largeError the error at which the chassis controller will switch to a faster control loop
-         * @param largeErrorTimeout the time the chassis controller will wait before switching to a faster control loop
-         * @param slew the maximum acceleration of the chassis controller
+		 * @param kI integral constant for the chassis controller
+		 * @param kD derivative constant for the chassis controller
+		 * @param antiWindup
+		 * @param smallError the error at which the chassis controller will switch to a slower control loop
+		 * @param smallErrorTimeout the time the chassis controller will wait before switching to a slower control loop
+		 * @param largeError the error at which the chassis controller will switch to a faster control loop
+		 * @param largeErrorTimeout the time the chassis controller will wait before switching to a faster control loop
+		 * @param slew the maximum acceleration of the chassis controller
 */
 // forward/backward PID
 lemlib::ControllerSettings lateralController{
-	8.000,	 // kP
-	0.000,	 // kI
-	30.000,	 // kD
-	0.000,	 // antiWindup
-	1,	 // smallErrorRange
-	100, // smallErrorTimeout
-	3,	 // largeErrorRange
-	500, // largeErrorTimeout
-	5	 // slew rate
+	8.000,	// kP
+	0.000,	// kI
+	30.000, // kD
+	0.000,	// antiWindup
+	1,		// smallErrorRange
+	100,	// smallErrorTimeout
+	3,		// largeErrorRange
+	500,	// largeErrorTimeout
+	5		// slew rate
 };
 
 // turning PID
 lemlib::ControllerSettings angularController{
-	8.000,	 // kP
-	0.000,	 // kI
-	30.000,	 // kD
-	0.000,	 // antiWindup
-	1,	 // smallErrorRange
-	100, // smallErrorTimeout
-	3,	 // largeErrorRange
-	500, // largeErrorTimeout
-	5	 // slew rate
+	8.000,	// kP
+	0.000,	// kI
+	30.000, // kD
+	0.000,	// antiWindup
+	1,		// smallErrorRange
+	100,	// smallErrorTimeout
+	3,		// largeErrorRange
+	500,	// largeErrorTimeout
+	5		// slew rate
 };
-
 
 lemlib::Chassis chassis(drivetrain, lateralController, angularController, sensors);
 
-// drive curves
-int forwardCurve = 14.6; // Curve strength
-
-// Function to calculate the curve for tank drive
-int curveTankDrive(bool red, int input, double t)
-{
-	if (red)
-	{
-		// Red curve calculation
-		// Modify this calculation as needed
-		return (std::exp(-t / 10) + std::exp((std::abs(input) - 127) / 10) * (1 - std::exp(-t / 10))) * input; // Default behavior if red curve is specified
-	}
-	else
-	{
-		// Blue curve calculation
-		return std::exp(((std::abs(input) - 127) * t) / 1000) * input;
-	}
-}
-
-// Function to drive the robot using tank drive with curves
-void driveTankWithCurve(int leftInput, int rightInput)
-{
-	int leftVal = curveTankDrive(false, leftInput, forwardCurve);
-	int rightVal = curveTankDrive(false, rightInput, forwardCurve);
-
-	// Apply the calculated values to the left and right motors
-	leftMotors.move(leftVal);
-	rightMotors.move(rightVal);
-}
-
-void driveTankWithCurveReverse(int leftInput, int rightInput)
-{
-	int leftVal = curveTankDrive(true, leftInput, forwardCurve);
-	int rightVal = curveTankDrive(true, rightInput, forwardCurve);
-
-	// Apply the calculated values to the left and right motors
-	leftMotors.move(-rightVal);
-	rightMotors.move(-leftVal);
-}
 // auto selection [the state the the auton will be in]
 enum class autonState
 {
@@ -389,17 +348,16 @@ void autonomous()
 		// opponent goalside auton
 
 		chassis.setPose(-48, -72, 0);			  // starting position
-		chassis.moveToPoint(-48, -50, 1000, 170);	  // drive forward
+		chassis.moveToPoint(-48, -50, 1000, 170); // drive forward
 		chassis.turnTo(-67, -32, 1000, 75);		  // turn to the left
-		chassis.moveToPoint(-67, -32, 2000, 170);	  // drive to the left and push ball in goal
+		chassis.moveToPoint(-67, -32, 2000, 170); // drive to the left and push ball in goal
 		chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
 		chassis.moveToPoint(-67, -26, 1000, 150);
 		chassis.moveToPoint(-67, -32, 1000, 170); // push ball in goal forwards
-		chassis.turnTo(-27, -67, 1000, 75);	 // turn to the right
+		chassis.turnTo(-27, -67, 1000, 75);		  // turn to the right
 		chassis.moveToPoint(-27, -67, 2000, 170);
 		chassis.turnTo(-15, -67, 1000, 75);
 		chassis.moveToPoint(-15, -67, 1000, 170); // touch horizontal bar
-	
 
 		break;
 
@@ -423,7 +381,7 @@ void autonomous()
 
 		chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
 
-		rightWing.set_value(true); // hold on to matchload bar
+		rightWing.set_value(true);		   // hold on to matchload bar
 		chassis.turnTo(28, -24, 1000, 75); // turn to the left
 
 		auto markTime = std::chrono::high_resolution_clock::now();
@@ -441,14 +399,14 @@ void autonomous()
 
 		rightWing.set_value(false); // release matchload bar
 
-		chassis.turnTo(-28, -55, 3000, 75); 
+		chassis.turnTo(-28, -55, 3000, 75);
 		chassis.moveToPoint(-28, -55, 3000, 170);
 		chassis.turnTo(32, -51, 3000, 75);
 		chassis.moveToPoint(32, -51, 3000, 75);
 		chassis.turnTo(50, -36, 3000, 75);
 		chassis.moveToPoint(50, -36, 3000, 170);
 		chassis.moveToPoint(50, -28, 3000, 170);
-		chassis.turnTo(7, -34, 3000,true ,75);
+		chassis.turnTo(7, -34, 3000, true, 75);
 		chassis.moveToPoint(7, -34, 3000, true, 170);
 		chassis.turnTo(36, -9, 3000, 75);
 		leftWing.set_value(true);
@@ -503,7 +461,8 @@ void opcontrol()
 	setBrakeModeOf("chassis", "coast");
 	setBrakeModeOf("catapult", "hold");
 	master.rumble(".");
-
+	// new timer
+	auto startTime = std::chrono::high_resolution_clock::now();
 	bool reversed = false;
 
 	bool leftWingState = false;
@@ -513,6 +472,19 @@ void opcontrol()
 	bool intakeToggled = false;
 
 	bool launcherToggle = false;
+
+	if (std::chrono::duration_cast<std::chrono::seconds>(
+			std::chrono::high_resolution_clock::now() - startTime)
+			.count() >= 75)
+	{
+		master.set_text(0, 0, "30s left");
+	}
+	else if (std::chrono::duration_cast<std::chrono::seconds>(
+				 std::chrono::high_resolution_clock::now() - startTime)
+				 .count() >= 105)
+	{
+		master.set_text(0, 0, "15s left");
+	}
 
 	while (true)
 	{
@@ -581,7 +553,7 @@ void opcontrol()
 		{
 			setBrakeModeOf("catapult", "hold");
 
-			catapult.move_velocity(60);
+			catapult.move_velocity(47);
 		}
 		else if (master.get_digital_new_press(DIGITAL_Y))
 		{
@@ -590,7 +562,7 @@ void opcontrol()
 		else if (launcherToggle)
 		{
 			setBrakeModeOf("catapult", "hold");
-			catapult.move_velocity(60);
+			catapult.move_velocity(47);
 		}
 		else if (!launcherToggle)
 		{
