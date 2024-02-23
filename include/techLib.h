@@ -6,6 +6,8 @@
 #include <chrono>
 #include <cmath>
 #include <future>
+#include <atomic>
+#include <mutex>
 
 #pragma
 

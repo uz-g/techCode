@@ -43,11 +43,11 @@ lemlib::Drivetrain drivetrain{
 
 // sensors for odometry
 lemlib::OdomSensors sensors{
-	&verticalWheel,	  // vertical tracking wheel 1
-	nullptr,		  // vertical tracking wheel 2
-	&horizontalWheel, // horizontal tracking wheel
-	nullptr,		  // horizontal tracking wheel 2
-	&inertial};		  // inertial sensor [imu]
+	nullptr,	// vertical tracking wheel 1
+	nullptr,	// vertical tracking wheel 2
+	nullptr,	// horizontal tracking wheel
+	nullptr,	// horizontal tracking wheel 2
+	&inertial}; // inertial sensor [imu]
 
 // conntrollerSettings requiremtns:
 /*
@@ -105,18 +105,18 @@ static const char *btnmMap[] = {"far side", "close side", "skills", ""}; // butt
 static lv_res_t autonBtnmAction(lv_obj_t *btnm, const char *txt) // button matrix action for auton selection
 {
 	if (lv_obj_get_free_num(btnm) == 100)
-	{ // reds
+	{ 
 		if (txt == "far side")
 		{
-			master.rumble(". _");
+			master.rumble("._");
 
-			autonSelection = autonState::closeSide;
+			autonSelection = autonState::farSide;
 		}
 		else if (txt == "close side")
 		{
 			master.rumble(".. _");
 
-			autonSelection = autonState::farSide;
+			autonSelection = autonState::closeSide;
 		}
 		else if (txt == "skills")
 		{
@@ -382,6 +382,7 @@ void autonomous()
 		chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
 
 		rightWing.set_value(true);		   // hold on to matchload bar
+		setBrakeModeOf("chassis", "hold"); // hold the catapult
 		chassis.turnTo(28, -24, 1000, 75); // turn to the left
 
 		auto markTime = std::chrono::high_resolution_clock::now();
@@ -473,19 +474,6 @@ void opcontrol()
 
 	bool launcherToggle = false;
 
-	if (std::chrono::duration_cast<std::chrono::seconds>(
-			std::chrono::high_resolution_clock::now() - startTime)
-			.count() >= 75)
-	{
-		master.set_text(0, 0, "30s left");
-	}
-	else if (std::chrono::duration_cast<std::chrono::seconds>(
-				 std::chrono::high_resolution_clock::now() - startTime)
-				 .count() >= 105)
-	{
-		master.set_text(0, 0, "15s left");
-	}
-
 	while (true)
 	{
 
@@ -526,7 +514,7 @@ void opcontrol()
 			rightWing.set_value(rightWingState);
 		}
 
-		// // intake controls
+		// // intake controls - no more intake
 		// if (master.get_digital(DIGITAL_R2))
 		// {
 		// 	intake.move_velocity(200);
@@ -562,11 +550,14 @@ void opcontrol()
 		else if (launcherToggle)
 		{
 			setBrakeModeOf("catapult", "hold");
+			setBrakeModeOf("chassis", "hold"); //hold the chassis im place when matchloading to prevent shock and to prevent pushing
 			catapult.move_velocity(47);
 		}
 		else if (!launcherToggle)
 		{
 			catapult.move_velocity(0);
+			setBrakeModeOf("chassis", "coast");
+			setBrakeModeOf("catapult", "coast");
 		}
 
 		if (master.get_digital_new_press(DIGITAL_B))
@@ -574,6 +565,21 @@ void opcontrol()
 			setBrakeModeOf("catapult", "coast");
 		}
 
-		pros::delay(10); // Run for 20 ms then update
+		// timer stuff
+
+		if (std::chrono::duration_cast<std::chrono::seconds>(
+				std::chrono::high_resolution_clock::now() - startTime)
+				.count() >= 75)
+		{
+			master.set_text(0, 0, "30s left");
+		}
+		else if (std::chrono::duration_cast<std::chrono::seconds>(
+					 std::chrono::high_resolution_clock::now() - startTime)
+					 .count() >= 105)
+		{
+			master.set_text(0, 0, "15s left");
+		}
+
+		pros::delay(10); // run this stuff than wait 20 ms
 	}
 }
