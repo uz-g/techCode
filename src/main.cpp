@@ -411,8 +411,11 @@ void autonomous() {
   auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::high_resolution_clock::now() - startTime);
 
-  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
-            << ": auton took " << elapsedTime.count() << " milliseconds" << std::endl;
+  std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(
+                   std::chrono::system_clock::now().time_since_epoch())
+                   .count()
+            << ": auton took " << elapsedTime.count() << " milliseconds"
+            << std::endl;
   disabled();
 }
 
