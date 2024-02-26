@@ -315,17 +315,17 @@ void autonomous() {
     // opponent goalside auton
 
     chassis.setPose(-48, -72, 0);             // starting position
-    chassis.moveToPoint(-48, -50, 1000, 170); // drive forward
+    chassis.moveToPoint(-48, -50, 1000, 100); // drive forward
     chassis.turnTo(-67, -32, 1000, 75);       // turn to the left
     chassis.moveToPoint(-67, -32, 2000,
-                        170); // drive to the left and push ball in goal
+                        100); // drive to the left and push ball in goal
     chassis.turnTo(-67, -26, 1000, true, 75); // go and turn backwards
     chassis.moveToPoint(-67, -26, 1000, 150);
-    chassis.moveToPoint(-67, -32, 1000, 170); // push ball in goal forwards
+    chassis.moveToPoint(-67, -32, 1000, 100); // push ball in goal forwards
     chassis.turnTo(-27, -67, 1000, 75);       // turn to the right
-    chassis.moveToPoint(-27, -67, 2000, 170);
+    chassis.moveToPoint(-27, -67, 2000, 100);
     chassis.turnTo(-15, -67, 1000, 75);
-    chassis.moveToPoint(-15, -67, 1000, 170); // touch horizontal bar
+    chassis.moveToPoint(-15, -67, 1000, 100); // touch horizontal bar
 
     break;
 
@@ -347,11 +347,11 @@ void autonomous() {
 
     chassis.setPose(-48, -72, 0); // starting position
 
-    chassis.moveToPoint(-42, -40, 1000, 170); // drive forward
+    chassis.moveToPose(-42, -40, 0, 1000); // drive forward
 
-    chassis.turnTo(-70, -32, 1000, true, 75); // turn to the left and backwards
+    chassis.turnTo(-70, -28, 1000, true, 75); // turn to the left and backwards
 
-    chassis.moveToPoint(-70, -32, 1000, 170); // drive forward
+    chassis.moveToPose(-70, -28, 0, 1000); // drive forward
 
     rightWing.set_value(true);         // hold on to matchload bar
     setBrakeModeOf("chassis", "hold"); // hold the catapult
@@ -371,39 +371,39 @@ void autonomous() {
 
     rightWing.set_value(false); // release matchload bar
 
-    chassis.turnTo(-28, -55, 3000, 75);
-    chassis.moveToPoint(-28, -55, 3000, 170);
-    chassis.turnTo(32, -51, 3000, 75);
-    chassis.moveToPoint(32, -51, 3000, 75);
-    chassis.turnTo(50, -36, 3000, 75);
-    chassis.moveToPoint(50, -36, 3000, 170);
-    chassis.moveToPoint(50, -28, 3000, 170);
-    chassis.turnTo(7, -34, 3000, true, 75);
-    chassis.moveToPoint(7, -34, 3000, true, 170);
-    chassis.turnTo(36, -9, 3000, 75);
+    chassis.turnTo(-28, -55, 3000, true, 75);
+    chassis.moveToPoint(-28, -55, 3000, true, 100);
+    chassis.turnTo(32, -51, 3000, true, 75);
+    chassis.moveToPoint(32, -51, 3000, true, 75);
+    chassis.turnTo(50, -36, 3000, true, 75);
+    chassis.moveToPoint(50, -36, 3000, true, 100);
+    chassis.moveToPoint(50, -28, 3000, true, 100);
+    chassis.turnTo(7, -34, 3000, false, 75);
+    chassis.moveToPoint(7, -34, 3000, false, 100);
+    chassis.turnTo(36, -9, 3000, true, 75);
     leftWing.set_value(true);
     rightWing.set_value(true);
-    chassis.moveToPoint(36, -9, 3000, 170);
+    chassis.moveToPoint(36, -9, 3000, true, 100);
     leftWing.set_value(false);
     rightWing.set_value(false);
-    chassis.turnTo(3, -4, 3000, true, 75);
-    chassis.moveToPoint(3, -4, 3000, true, 170);
-    chassis.turnTo(40, 15, 3000, 75);
+    chassis.turnTo(3, -4, 3000, false, 75);
+    chassis.moveToPoint(3, -4, 3000, false, 100);
+    chassis.turnTo(40, 15, 3000, true, 75);
     leftWing.set_value(true);
     rightWing.set_value(true);
-    chassis.moveToPoint(41, 15, 3000, true, 170);
+    chassis.moveToPoint(41, 15, 3000, false, 100);
     leftWing.set_value(false);
     rightWing.set_value(false);
-    chassis.moveToPoint(24, 19, 3000, 170);
+    chassis.moveToPoint(24, 19, 3000, true, 100);
 
-    chassis.turnTo(39, 55, 3000, 75);
-    chassis.moveToPoint(39, 55, 3000, 170);
+    chassis.turnTo(39, 55, 3000, true, 75);
+    chassis.moveToPoint(39, 55, 3000, true, 100);
 
-    chassis.turnTo(48, 32, 3000, 75);
-    chassis.moveToPoint(48, 32, 3000, 170);
+    chassis.turnTo(48, 32, 3000, true, 75);
+    chassis.moveToPoint(48, 32, 3000, true, 100);
 
-    chassis.turnTo(9, 41, 3000, 75);
-    chassis.moveToPoint(9, 41, 3000, 170);
+    chassis.turnTo(9, 41, 3000, true, 75);
+    chassis.moveToPoint(9, 41, 3000, true, 100);
 
     break;
   }
@@ -450,37 +450,25 @@ void opcontrol() {
 
   while (true) {
 
-    if (master.get_digital_new_press(DIGITAL_X)) {
-      reversed = !reversed;
-    }
+    // chassis controls
+    master.get_digital_new_press(DIGITAL_X) ? reversed = !reversed : 0;
 
-    double leftStick = master.get_analog(ANALOG_LEFT_Y);
-    double rightStick = master.get_analog(ANALOG_RIGHT_Y);
-
-    if (reversed) {
-      chassis.tank(-rightStick, -leftStick, 17);
-    } else if (!reversed) {
-      // lemlib drive curve
-      // input, input, scale
-
-      chassis.tank(leftStick, rightStick, 17);
-    }
+    reversed ? chassis.tank(-ANALOG_RIGHT_Y, -ANALOG_LEFT_Y, 17)
+             : chassis.tank(ANALOG_LEFT_Y, ANALOG_RIGHT_Y, 17);
 
     // wing controls
-    if (master.get_digital_new_press(DIGITAL_L1)) { // Left wing
-      leftWingState = !leftWingState;
-      leftWing.set_value(leftWingState);
-    } else if (master.get_digital_new_press(DIGITAL_R1)) { // Right wing
-      rightWingState = !rightWingState;
-      rightWing.set_value(rightWingState);
-    }
-
-    else if (master.get_digital_new_press(DIGITAL_L2)) { // Both wings
-      leftWingState = !leftWingState;
-      rightWingState = leftWingState;
-      leftWing.set_value(leftWingState);
-      rightWing.set_value(rightWingState);
-    }
+    // wing controls
+    master.get_digital_new_press(DIGITAL_L1) // left wing
+        ? (leftWingState = !leftWingState, leftWing.set_value(leftWingState))
+        : master.get_digital_new_press(DIGITAL_R1) // right wing
+              ? (rightWingState = !rightWingState,
+                 rightWing.set_value(rightWingState))
+              : master.get_digital_new_press(DIGITAL_L2) // both wings
+                    ? (leftWingState = !leftWingState,
+                       rightWingState = leftWingState,
+                       leftWing.set_value(leftWingState),
+                       rightWing.set_value(rightWingState))
+                    : 0;
 
     // // intake controls - no more intake
     // if (master.get_digital(DIGITAL_R2))
